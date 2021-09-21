@@ -116,6 +116,7 @@
                     <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                     </archive>
+					 <finalName>${project.artifactId}-${project.version}-WLPatched</finalName>      
                 </configuration>
             </plugin>
             <plugin>

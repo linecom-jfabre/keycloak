@@ -38,6 +38,7 @@ import org.keycloak.util.TokenUtil;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 
@@ -139,8 +140,50 @@ public class OAuthRequestAuthenticator {
         return getQueryParamValue(OAuth2Constants.CODE);
     }
 
+    
+    
+
+
+    /**
+     * 
+     * Weblogic adds 443 port to https URLs.
+     * If the URL is https and also comes with the port 443, this function returns  
+     * exactly the same URL but without the port (as 443 is a default for https), 
+     * if the port is not in the URL, returns the same URL.
+     *  
+     * @param url
+     * @return
+     */
+	private String patchUriWeblogic(String url)
+	{
+		try {
+			URI reqURL = new URI(url);
+
+			if (reqURL.getScheme().equalsIgnoreCase("https") && reqURL.getPort()==443)
+			{
+				StringBuilder newURL = new StringBuilder(); 
+				//Schema + Host (without port) + patch
+				newURL.append(reqURL.getScheme()+"://"+reqURL.getHost()+reqURL.getPath());
+				//+query if exists
+				if (reqURL.getRawQuery()!=null)
+					newURL.append("?"+reqURL.getRawQuery());
+				//+fragment if exists
+				if (reqURL.getRawFragment()!=null)
+					newURL.append("#"+reqURL.getRawFragment());
+				return newURL.toString();
+
+			} else 
+				return url;
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+			return url;
+		}
+	}
+    
+    
     protected String getRedirectUri(String state) {
         String url = getRequestUrl();
+        url = patchUriWeblogic(url);
         log.debugf("callback uri: %s", url);
       
         if (!facade.getRequest().isSecure() && deployment.getSslRequired().isRequired(facade.getRequest().getRemoteAddr())) {
